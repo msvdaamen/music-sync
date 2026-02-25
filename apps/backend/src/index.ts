@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { rateLimiter } from "hono-rate-limiter";
 import { secureHeaders } from "hono/secure-headers";
 import { getConnInfo } from "hono/bun";
+import { musicConnectionRouter } from "./features/music-connection/controller";
 
 const app = new Hono();
 
@@ -34,5 +35,7 @@ app.use(limiter);
 app.get("/", (c) => c.text("Hello!"));
 
 app.on(["POST", "GET"], "/v1/auth/*", (c) => auth.handler(c.req.raw));
+
+app.route("/v1/connections", musicConnectionRouter);
 
 export default app;

@@ -11,12 +11,6 @@ import {
 } from "@/components/ui/card";
 
 export const Route = createFileRoute("/(main)/")({
-  beforeLoad: async () => {
-    const { data } = await authClient.getSession();
-    if (!data?.session) {
-      throw redirect({ to: "/auth/sign-in" });
-    }
-  },
   component: IndexPage,
 });
 
