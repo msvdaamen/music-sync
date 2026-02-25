@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Music2, ExternalLink } from "lucide-react";
+import { Music2, ExternalLink, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useCreateSpotifyConnection } from "@/features/connections/api/create-spotify-connection";
+import { useDeleteConnection } from "@/features/connections/api/delete-connection";
+import { useConnections } from "@/features/connections/api/get-connection";
 
 export const Route = createFileRoute("/(main)/connections/")({
   component: IndexPage,
@@ -17,6 +19,23 @@ export const Route = createFileRoute("/(main)/connections/")({
 // ─── Page ───────────────────────────────────────────────────
 
 function IndexPage() {
+  const { data: connections, isPending, error } = useConnections();
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  const hasSpotifyConnection = connections?.some(
+    (connection) => connection.provider === "spotify",
+  );
+  // const hasAppleMusicConnection = connections?.some(
+  //   (connection) => connection.provider === "apple_music",
+  // );
+
   return (
     <>
       {/* Header */}
@@ -30,7 +49,7 @@ function IndexPage() {
 
       {/* Service cards */}
       <div className="grid gap-6 sm:grid-cols-2">
-        <SpotifyCard isConnected={false} />
+        <SpotifyCard isConnected={hasSpotifyConnection} />
         <AppleMusicCard isConnected={false} />
       </div>
     </>
@@ -39,9 +58,14 @@ function IndexPage() {
 
 function SpotifyCard({ isConnected }: { isConnected: boolean }) {
   const createSpotifyConnection = useCreateSpotifyConnection();
+  const deleteConnection = useDeleteConnection();
 
   async function startAuthFlow() {
     await createSpotifyConnection.mutateAsync();
+  }
+
+  async function disconnect() {
+    await deleteConnection.mutateAsync("spotify");
   }
 
   return (
@@ -67,14 +91,27 @@ function SpotifyCard({ isConnected }: { isConnected: boolean }) {
         </div>
       </CardHeader>
       <CardContent>
-        <Button
-          size="sm"
-          onClick={startAuthFlow}
-          disabled={createSpotifyConnection.isPending}
-        >
-          <ExternalLink className="size-4" />
-          Connect Spotify
-        </Button>
+        {!isConnected && (
+          <Button
+            size="sm"
+            onClick={startAuthFlow}
+            disabled={createSpotifyConnection.isPending}
+          >
+            <ExternalLink className="size-4" />
+            Connect Spotify
+          </Button>
+        )}
+        {isConnected && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={disconnect}
+            disabled={deleteConnection.isPending}
+          >
+            <Unlink className="size-4" />
+            Disconnect
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

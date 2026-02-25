@@ -1,6 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { DbService } from "../../providers/database";
-import { musicConnections, type NewMusicConnectionEntity } from "../../schema";
+import {
+  musicConnections,
+  type MusicConnectionEntity,
+  type NewMusicConnectionEntity,
+} from "../../schema";
 import type { MusicProvider } from "./types/music-provider.type";
 
 export class MusicConnectionService extends DbService {
@@ -20,6 +24,22 @@ export class MusicConnectionService extends DbService {
       })
       .from(musicConnections)
       .where(eq(musicConnections.userId, userId));
+  }
+
+  async getConnectionCredentials(
+    userId: string,
+    provider: MusicProvider,
+  ): Promise<MusicConnectionEntity | undefined> {
+    const [connection] = await this.database
+      .select()
+      .from(musicConnections)
+      .where(
+        and(
+          eq(musicConnections.userId, userId),
+          eq(musicConnections.provider, provider),
+        ),
+      );
+    return connection;
   }
 
   async createConnection(connection: NewMusicConnectionEntity) {

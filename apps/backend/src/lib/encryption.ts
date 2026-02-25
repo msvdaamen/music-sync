@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  createHash,
+} from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
@@ -9,12 +14,11 @@ function getEncryptionKey(): Buffer {
   if (!key) {
     throw new Error("ENCRYPTION_KEY environment variable is required");
   }
-  if (key.length !== 32) {
-    throw new Error(
-      "ENCRYPTION_KEY must be a 64-character hex string (32 bytes)",
-    );
-  }
-  return Buffer.from(key, "hex");
+  const encryptedKey = createHash("sha512")
+    .update(key)
+    .digest("hex")
+    .substring(0, 32);
+  return Buffer.from(encryptedKey);
 }
 
 /**

@@ -15,8 +15,8 @@ export const musicConnections = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    provider: text("provider").notNull(), // 'spotify' | 'apple_music'
-    providerUserId: text("provider_user_id"),
+    provider: text("provider", { enum: ["spotify", "apple_music"] }).notNull(),
+    providerUserId: text("provider_user_id").notNull(),
     providerDisplayName: text("provider_display_name"),
     accessTokenEncrypted: text("access_token_encrypted").notNull(),
     refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),

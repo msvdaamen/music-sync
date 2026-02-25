@@ -1,1 +1,3 @@
-export interface MusicClient {}
+export interface MusicClient {
+  getTracks(): Promise<any[]>;
+}

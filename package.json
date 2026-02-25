@@ -1,0 +1,16 @@
+{
+  "name": "music-sync",
+  "type": "module",
+  "private": true,
+  "scripts": {},
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/**/*"
+  ]
+}

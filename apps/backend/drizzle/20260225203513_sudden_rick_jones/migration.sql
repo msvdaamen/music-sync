@@ -1,3 +1,16 @@
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY,
+	"name" text NOT NULL,
+	"email" text NOT NULL UNIQUE,
+	"email_verified" boolean DEFAULT false NOT NULL,
+	"image" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"banned" boolean DEFAULT false,
+	"ban_reason" text,
+	"ban_expires" timestamp
+);
+--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY,
 	"account_id" text NOT NULL,
@@ -35,22 +48,25 @@ CREATE TABLE "verifications" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "users" (
+CREATE TABLE "music_connections" (
 	"id" uuid PRIMARY KEY,
-	"name" text NOT NULL,
-	"email" text NOT NULL UNIQUE,
-	"email_verified" boolean DEFAULT false NOT NULL,
-	"image" text,
+	"user_id" uuid NOT NULL,
+	"provider" text NOT NULL,
+	"provider_user_id" text,
+	"provider_display_name" text,
+	"access_token_encrypted" text NOT NULL,
+	"refresh_token_encrypted" text NOT NULL,
+	"token_expires_at" timestamp NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"banned" boolean DEFAULT false,
-	"ban_reason" text,
-	"ban_expires" timestamp
+	CONSTRAINT "music_connections_user_provider_unique" UNIQUE("user_id","provider")
 );
 --> statement-breakpoint
+CREATE INDEX "users_created_at_index" ON "users" ("created_at");--> statement-breakpoint
 CREATE INDEX "accounts_userId_idx" ON "accounts" ("user_id");--> statement-breakpoint
 CREATE INDEX "sessions_userId_idx" ON "sessions" ("user_id");--> statement-breakpoint
 CREATE INDEX "verifications_identifier_idx" ON "verifications" ("identifier");--> statement-breakpoint
-CREATE INDEX "users_created_at_index" ON "users" ("created_at");--> statement-breakpoint
+CREATE INDEX "music_connections_user_id_idx" ON "music_connections" ("user_id");--> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "music_connections" ADD CONSTRAINT "music_connections_user_id_users_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;

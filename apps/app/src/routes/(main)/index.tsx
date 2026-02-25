@@ -1,6 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Music2, ListMusic, Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,32 +8,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTracks } from "@/features/connections/api/get-tracks";
 
 export const Route = createFileRoute("/(main)/")({
   component: IndexPage,
 });
 
 function IndexPage() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: tracks, isPending, error } = useTracks("spotify");
 
-  if (isPending) {
+  if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="text-primary size-6 animate-spin" />
+        <p className="text-red-500">Error: {error.message}</p>
       </div>
     );
   }
 
-  const user = session?.user;
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="text-primary size-5 animate-spin" />
+      </div>
+    );
+  }
+
+  console.log(tracks);
 
   return (
     <>
       {/* Welcome */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">
-          Welcome back
-          {user?.name ? `, ${user.name}` : ``}!
-        </h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Manage and sync your music library across all your devices.
         </p>

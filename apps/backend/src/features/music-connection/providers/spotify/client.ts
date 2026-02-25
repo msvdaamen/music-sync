@@ -1,98 +1,16 @@
 import { add, isAfter, sub } from "date-fns";
-import type {
-  CallbackParams,
-  MusicProvider,
-  MusicProviderAccess,
-  MusicProviderConnection,
-} from "../types/music-provider.type";
-import { MusicProviderClient } from "./provider";
-import { type Spotify } from "./spotify/types";
-import { DbService } from "../../../providers/database";
-import { musicConnections, type MusicConnectionEntity } from "../../../schema";
+import { encrypt } from "../../../../lib/encryption";
+import { DbService } from "../../../../providers/database";
+import type { MusicClient } from "../../types/music-client";
+import type { MusicProvider } from "../../types/music-provider.type";
+import type { Spotify } from "./types";
+import { musicConnections } from "../../../../schema";
 import { and, eq } from "drizzle-orm";
-import { decrypt, encrypt } from "../../../lib/encryption";
-import type { MusicClient } from "../types/music-client";
-
-export class SpotifyProvider
-  extends MusicProviderClient
-  implements MusicProviderConnection
-{
-  accountUrl = "https://accounts.spotify.com";
-  apiUrl = "https://api.spotify.com/v1";
-  scopes = "user-read-private user-read-email";
-
-  constructor(
-    private readonly clientId: string,
-    private readonly clientSecret: string,
-    private readonly redirectUri: string,
-  ) {
-    super();
-  }
-
-  async authorize(): Promise<string> {
-    const authUrl = new URL(`${this.accountUrl}/authorize`);
-    const state = this.generateRandomString(16);
-    const params = {
-      response_type: "code",
-      client_id: this.clientId,
-      scope: this.scopes,
-      state,
-      redirect_uri: this.redirectUri,
-    };
-
-    authUrl.search = new URLSearchParams(params).toString();
-    return authUrl.toString();
-  }
-
-  async callback(params: CallbackParams): Promise<MusicProviderAccess> {
-    const authUrl = `${this.accountUrl}/api/token`;
-    const response = await fetch(authUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          Buffer.from(this.clientId + ":" + this.clientSecret).toString(
-            "base64",
-          ),
-      },
-      body: new URLSearchParams({
-        client_id: this.clientId,
-        grant_type: "authorization_code",
-        code: params.code,
-        redirect_uri: this.redirectUri,
-      }),
-    });
-    const data = (await response.json()) as Spotify.AccessTokenResponse;
-    const expiresAt = add(new Date(), { seconds: data.expires_in });
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt,
-    };
-  }
-
-  createClient(
-    userId: string,
-    musicConnection: MusicConnectionEntity,
-  ): MusicClient {
-    const accessToken = decrypt(musicConnection.accessTokenEncrypted);
-    const refreshToken = decrypt(musicConnection.refreshTokenEncrypted);
-    const expiresAt = musicConnection.tokenExpiresAt;
-    return new SpotifyClient(
-      this.clientId,
-      this.clientSecret,
-      accessToken,
-      refreshToken,
-      expiresAt,
-      userId,
-    );
-  }
-}
 
 export class SpotifyClient extends DbService implements MusicClient {
   private readonly provider: MusicProvider = "spotify";
   accountUrl = "https://accounts.spotify.com";
+  apiUrl = "https://api.spotify.com";
   bufferRefreshTimeS = 30; // seconds
 
   private refreshPromise: Promise<void> | null = null;
@@ -107,6 +25,16 @@ export class SpotifyClient extends DbService implements MusicClient {
   ) {
     super();
   }
+  async getTracks(): Promise<any[]> {
+    const response = await this.fetch(`${this.apiUrl}/v1/me/tracks`);
+    const data = (await response.json()) as Spotify.GetUserTracksResponse;
+    return data.items.map((item) => item.track);
+  }
+
+  async getProfile(): Promise<Spotify.GetCurrentUserProfileResponse> {
+    const response = await this.fetch(`${this.apiUrl}/v1/me`);
+    return response.json() as Promise<Spotify.GetCurrentUserProfileResponse>;
+  }
 
   async fetch(url: string, options?: RequestInit): Promise<Response> {
     if (this.isTokenExpired()) {
@@ -120,8 +48,8 @@ export class SpotifyClient extends DbService implements MusicClient {
 
   private isTokenExpired(): boolean {
     return isAfter(
-      this.expiresAt,
       sub(new Date(), { seconds: this.bufferRefreshTimeS }),
+      this.expiresAt,
     );
   }
 
@@ -191,9 +119,3 @@ export class SpotifyClient extends DbService implements MusicClient {
       .execute();
   }
 }
-
-export const spotifyProvider = new SpotifyProvider(
-  process.env.SPOTIFY_CLIENT_ID!,
-  process.env.SPOTIFY_CLIENT_SECRET!,
-  process.env.SPOTIFY_REDIRECT_URI!,
-);

@@ -3,7 +3,8 @@ import { encrypt } from "../../lib/encryption";
 import { musicConnectionService } from "./service";
 import { sValidator } from "@hono/standard-validator";
 import { type } from "arktype";
-import { spotifyProvider } from "./providers/spotify.provider";
+import { spotifyProvider } from "./providers/spotify/provider";
+import { providerDto } from "./dto/provider.dto";
 
 const app = authRouter.createApp();
 
@@ -12,25 +13,42 @@ app.get("/", async (c) => {
 
   const connections = await musicConnectionService.getConnections(user.id);
 
-  return c.json({ connections });
+  return c.json(connections);
 });
 
-app.delete(
-  "/:provider",
-  sValidator("param", type({ provider: "'spotify'|'apple_music'" })),
-  async (c) => {
-    const validated = c.req.valid("param");
-    const user = c.get("user");
-    const provider = validated.provider;
+app.get("/:provider/tracks", sValidator("param", providerDto), async (c) => {
+  const user = c.get("user");
+  const { provider } = c.req.valid("param");
 
-    await musicConnectionService.deleteConnection(user.id, provider);
+  const connection = await musicConnectionService.getConnectionCredentials(
+    user.id,
+    provider,
+  );
 
-    return c.json({ success: true });
-  },
-);
+  if (!connection) {
+    return c.json({ error: "No connection found" }, 404);
+  }
+
+  const client = spotifyProvider.createClient(user.id, connection);
+
+  const tracks = await client.getTracks();
+
+  return c.json(tracks);
+});
+
+app.delete("/:provider", sValidator("param", providerDto), async (c) => {
+  const validated = c.req.valid("param");
+  const user = c.get("user");
+  const provider = validated.provider;
+
+  await musicConnectionService.deleteConnection(user.id, provider);
+
+  return c.json({ success: true });
+});
 
 app.get("/spotify/authorize", async (c) => {
-  const redirectUrl = await spotifyProvider.authorize();
+  const user = c.get("user");
+  const redirectUrl = await spotifyProvider.authorize(user.id);
 
   return c.json({ redirectUrl: redirectUrl });
 });
@@ -47,7 +65,11 @@ app.post(
   async (c) => {
     const user = c.get("user");
     const validated = c.req.valid("json");
-    const providerAccess = await spotifyProvider.callback(validated);
+    const providerAccess = await spotifyProvider.callback(
+      user.id,
+      validated.state,
+      validated.code,
+    );
 
     const accessTokenEncrypted = encrypt(providerAccess.accessToken);
     const refreshTokenEncrypted = encrypt(providerAccess.refreshToken);
@@ -55,11 +77,14 @@ app.post(
     await musicConnectionService.createConnection({
       id: Bun.randomUUIDv7(),
       userId: user.id,
+      providerUserId: providerAccess.userId,
+      providerDisplayName: providerAccess.displayName,
       provider: "spotify",
       accessTokenEncrypted: accessTokenEncrypted,
       refreshTokenEncrypted: refreshTokenEncrypted,
       tokenExpiresAt: providerAccess.expiresAt,
     });
+    return c.json({ success: true });
   },
 );
 
