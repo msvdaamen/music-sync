@@ -5,6 +5,7 @@ import { sValidator } from "@hono/standard-validator";
 import { type } from "arktype";
 import { spotifyProvider } from "./providers/spotify/provider";
 import { providerDto } from "./dto/provider.dto";
+import { getTracksDto } from "./dto/get-tracks.dto";
 
 const app = authRouter.createApp();
 
@@ -16,9 +17,10 @@ app.get("/", async (c) => {
   return c.json(connections);
 });
 
-app.get("/:provider/tracks", sValidator("param", providerDto), async (c) => {
+app.get("/:provider/tracks", sValidator("param", providerDto), sValidator("query", getTracksDto), async (c) => {
   const user = c.get("user");
   const { provider } = c.req.valid("param");
+  const { offset, limit } = c.req.valid("query");
 
   const connection = await musicConnectionService.getConnectionCredentials(
     user.id,
@@ -31,7 +33,7 @@ app.get("/:provider/tracks", sValidator("param", providerDto), async (c) => {
 
   const client = spotifyProvider.createClient(user.id, connection);
 
-  const tracks = await client.getTracks();
+  const tracks = await client.getTracks(offset, limit);
 
   return c.json(tracks);
 });

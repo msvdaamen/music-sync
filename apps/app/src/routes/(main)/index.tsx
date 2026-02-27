@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Music2, ListMusic, Loader2 } from "lucide-react";
+import { Music2, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,14 +8,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useTracks } from "@/features/connections/api/get-tracks";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useInfiniteTracks } from "@/features/connections/api/get-tracks";
+import { TrackList } from "@/features/connections/components/tracklist";
 
 export const Route = createFileRoute("/(main)/")({
   component: IndexPage,
 });
 
 function IndexPage() {
-  const { data: tracks, isPending, error } = useTracks("spotify");
+  const {
+    data,
+    isPending,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteTracks({ provider: "spotify", limit: 50 });
+
+  const tracks = data?.pages.flatMap((page) => page.data) ?? [];
+  const total = data?.pages[0]?.total;
 
   if (error) {
     return (
@@ -25,18 +37,8 @@ function IndexPage() {
     );
   }
 
-  if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="text-primary size-5 animate-spin" />
-      </div>
-    );
-  }
-
-  console.log(tracks);
-
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Welcome */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -47,38 +49,71 @@ function IndexPage() {
 
       {/* Stats grid */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Synced Tracks" value="—" />
+        <StatCard
+          label="Synced Tracks"
+          value={isPending ? "—" : total !== undefined ? String(total) : "—"}
+        />
         <StatCard label="Playlists" value="—" />
         <StatCard label="Devices" value="—" />
       </div>
 
-      {/* Placeholder library */}
-      <Card>
+      {/* Library */}
+      <Card className="flex-1 min-h-0 pb-0">
         <CardHeader>
           <div className="flex items-center gap-2">
             <ListMusic className="text-primary size-5" />
             <CardTitle>Your Library</CardTitle>
           </div>
           <CardDescription>
-            Your synced tracks will appear here once you connect a music source.
+            {isPending && "Loading your tracks…"}
+            {!isPending && `${total ?? tracks.length} tracks`}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="border-border rounded-lg border border-dashed py-16 text-center">
-            <Music2 className="text-muted-foreground/40 mx-auto mb-3 size-10" />
-            <p className="text-muted-foreground text-sm font-medium">
-              No tracks yet
-            </p>
-            <p className="text-muted-foreground/70 mt-1 text-xs">
-              Connect a music source to start syncing.
-            </p>
-            <Button size="sm" className="mt-4">
-              Connect a source
-            </Button>
-          </div>
+        <CardContent className="flex flex-col flex-1 min-h-0 p-0">
+          {isPending && <TrackSkeletonList count={12} />}
+          {!isPending && tracks.length === 0 && <NoTracks />}
+          {!isPending && tracks.length > 0 && (
+            <TrackList
+              total={total || 0}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              tracks={tracks}
+              loadMore={fetchNextPage}
+              className="flex-1 min-h-0"
+            />
+          )}
         </CardContent>
       </Card>
-    </>
+    </div>
+  );
+}
+
+function NoTracks() {
+  return (
+    <div className="border-border m-6 rounded-lg border border-dashed py-16 text-center">
+      <Music2 className="text-muted-foreground/40 mx-auto mb-3 size-10" />
+      <p className="text-muted-foreground text-sm font-medium">No tracks yet</p>
+      <p className="text-muted-foreground/70 mt-1 text-xs">
+        Connect a music source to start syncing.
+      </p>
+      <Button size="sm" className="mt-4">
+        Connect a source
+      </Button>
+    </div>
+  );
+}
+
+function TrackSkeletonList({ count }: { count: number }) {
+  return (
+    <ul>
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className="flex items-center gap-3 px-6 py-3">
+          <Skeleton className="h-4 w-4 shrink-0" />
+          <Skeleton className="size-9 shrink-0 rounded" />
+          <Skeleton className="h-4 w-48 max-w-full" />
+        </li>
+      ))}
+    </ul>
   );
 }
 

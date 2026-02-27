@@ -9,6 +9,9 @@ export namespace Spotify {
   };
 
   export type GetUserTracksResponse = {
+    limit: number;
+    offset: number;
+    total: number;
     items: SavedTrack[];
   };
 
@@ -17,9 +20,28 @@ export namespace Spotify {
     track: Track;
   };
 
+  export type Image = {
+    url: string;
+    height: number;
+    width: number;
+  }
+
+  export type SimpleArtist = {
+    id: string;
+    name: string;
+  }
+
+  export type Album = {
+    id: string;
+    name: string;
+    images: Image[];
+  }
+
   export type Track = {
     id: string;
     name: string;
+    album: Album;
+    artists: SimpleArtist[];
   };
 
   export type TokenResponse = {
@@ -32,7 +54,7 @@ export namespace Spotify {
 
   export type RefreshTokenResponse = {
     access_token: string;
-    refresh_token: string;
+    refresh_token: string | undefined;
     expires_in: number;
     token_type: string;
     scope: string;

@@ -6,6 +6,8 @@ import type { MusicProvider } from "../../types/music-provider.type";
 import type { Spotify } from "./types";
 import { musicConnections } from "../../../../schema";
 import { and, eq } from "drizzle-orm";
+import type { Track } from "../../types/track.type";
+import type { OffsetPagination } from "../../../../types/offset-pagination";
 
 export class SpotifyClient extends DbService implements MusicClient {
   private readonly provider: MusicProvider = "spotify";
@@ -25,10 +27,26 @@ export class SpotifyClient extends DbService implements MusicClient {
   ) {
     super();
   }
-  async getTracks(): Promise<any[]> {
-    const response = await this.fetch(`${this.apiUrl}/v1/me/tracks`);
+  async getTracks(offset: number, limit: number): Promise<OffsetPagination<Track>> {
+    const response = await this.fetch(`${this.apiUrl}/v1/me/tracks?limit=${limit}&offset=${offset}`);
     const data = (await response.json()) as Spotify.GetUserTracksResponse;
-    return data.items.map((item) => item.track);
+    const trackData: Track[] = data.items.map(item => {
+      const images = item.track.album.images;
+      const artists = item.track.artists.map(artist => ({ id: artist.id, name: artist.name }));
+
+      return {
+        id: item.track.id,
+        name: item.track.name,
+        images,
+        artists
+      }
+    })
+    return {
+      data: trackData,
+      total: data.total,
+      limit,
+      offset
+    }
   }
 
   async getProfile(): Promise<Spotify.GetCurrentUserProfileResponse> {
@@ -43,7 +61,12 @@ export class SpotifyClient extends DbService implements MusicClient {
 
     const headers = new Headers(options?.headers);
     headers.set("Authorization", `Bearer ${this.accessToken}`);
-    return await fetch(url, { ...options, headers });
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} ${error}`);
+    }
+    return response;
   }
 
   private isTokenExpired(): boolean {
@@ -92,9 +115,10 @@ export class SpotifyClient extends DbService implements MusicClient {
     }
 
     const data = (await response.json()) as Spotify.RefreshTokenResponse;
-
     this.accessToken = data.access_token;
-    this.refreshToken = data.refresh_token;
+    if (data.refresh_token) {
+      this.refreshToken = data.refresh_token;
+    }
     this.expiresAt = add(new Date(), { seconds: data.expires_in });
     await this.writeTokens();
   }
