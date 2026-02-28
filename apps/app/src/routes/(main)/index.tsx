@@ -1,22 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Music2, ListMusic } from "lucide-react";
+import { Music2, ListMusic, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInfiniteTracks } from "@/features/connections/api/get-tracks";
+import { infiniteTracksQueryKey, useInfiniteTracks } from "@/features/connections/api/get-tracks";
 import { TrackList } from "@/features/connections/components/tracklist";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import type { GetTracksResponse } from "@/features/connections/api/get-tracks";
 
 export const Route = createFileRoute("/(main)/")({
+  loader: async ({ context: { queryClient } }) => {
+    queryClient.setQueryData(
+      infiniteTracksQueryKey("spotify"),
+      (data: InfiniteData<GetTracksResponse> | undefined) =>
+        data ? { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) } : data,
+    );
+  },
   component: IndexPage,
 });
 
 function IndexPage() {
+  const queryClient = useQueryClient();
   const {
     data,
     isPending,
@@ -24,7 +28,17 @@ function IndexPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchQuery,
   } = useInfiniteTracks({ provider: "spotify", limit: 50 });
+
+  function refetch() {
+    queryClient.setQueryData(
+      infiniteTracksQueryKey("spotify"),
+      (data: InfiniteData<GetTracksResponse> | undefined) =>
+        data ? { pages: data.pages.slice(0, 1), pageParams: data.pageParams.slice(0, 1) } : data,
+    );
+    refetchQuery();
+  }
 
   const tracks = data?.pages.flatMap((page) => page.data) ?? [];
   const total = data?.pages[0]?.total;
@@ -60,13 +74,20 @@ function IndexPage() {
       {/* Library */}
       <Card className="flex-1 min-h-0 pb-0">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <ListMusic className="text-primary size-5" />
-            <CardTitle>Your Library</CardTitle>
+          <div className="flex justify-between gap-2">
+            <div className="flex gap-2">
+              <ListMusic className="text-primary size-5" />
+              <CardTitle>Your Library</CardTitle>
+            </div>
+            {!isPending && (
+              <Button onClick={() => refetch()}>
+                <RefreshCcw />
+              </Button>
+            )}
           </div>
           <CardDescription>
             {isPending && "Loading your tracks…"}
-            {!isPending && `${total ?? tracks.length} tracks`}
+            {!isPending && `${total ?? 0} tracks`}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col flex-1 min-h-0 p-0">
@@ -78,7 +99,10 @@ function IndexPage() {
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               tracks={tracks}
-              loadMore={fetchNextPage}
+              loadMore={() => {
+                console.log("Fetch more");
+                fetchNextPage();
+              }}
               className="flex-1 min-h-0"
             />
           )}
@@ -121,9 +145,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <Card>
       <CardContent className="pt-6">
-        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-          {label}
-        </p>
+        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">{label}</p>
         <p className="mt-1 text-2xl font-semibold">{value}</p>
       </CardContent>
     </Card>

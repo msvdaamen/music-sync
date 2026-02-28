@@ -32,7 +32,7 @@ export function TrackList({
   });
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  const pendingLoadRef = useRef(isFetchingNextPage);
+  const pendingLoadRef = useRef(false);
 
   useEffect(() => {
     const lastItem = virtualItems[virtualItems.length - 1];
@@ -45,11 +45,7 @@ export function TrackList({
       return;
     }
 
-    if (
-      lastItem.index >= tracks.length - 1 &&
-      hasNextPage &&
-      !pendingLoadRef.current
-    ) {
+    if (lastItem.index >= tracks.length - 1 && hasNextPage && !pendingLoadRef.current) {
       // Set the guard synchronously before the next render so rapid
       // scroll events cannot fire loadMore() more than once per page.
       pendingLoadRef.current = true;
@@ -59,10 +55,7 @@ export function TrackList({
 
   return (
     <div ref={parentRef} className={cn("overflow-y-auto", className)}>
-      <div
-        style={{ height: rowVirtualizer.getTotalSize() }}
-        className="relative"
-      >
+      <div style={{ height: rowVirtualizer.getTotalSize() }} className="relative">
         {virtualItems.map((virtualRow) => {
           const isLoaderRow = virtualRow.index >= tracks.length;
           const track = tracks[virtualRow.index];
@@ -90,11 +83,7 @@ export function TrackList({
                   </span>
                   <div className="bg-muted flex size-9 shrink-0 items-center justify-center overflow-hidden rounded">
                     {image ? (
-                      <img
-                        src={image.url}
-                        alt={track.name}
-                        className="size-full object-cover"
-                      />
+                      <img src={image.url} alt={track.name} className="size-full object-cover" />
                     ) : (
                       <Music2 className="text-muted-foreground size-4" />
                     )}
