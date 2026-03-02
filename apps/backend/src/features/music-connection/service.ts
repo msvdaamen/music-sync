@@ -33,12 +33,7 @@ export class MusicConnectionService extends DbService {
     const [connection] = await this.database
       .select()
       .from(musicConnections)
-      .where(
-        and(
-          eq(musicConnections.userId, userId),
-          eq(musicConnections.provider, provider),
-        ),
-      );
+      .where(and(eq(musicConnections.userId, userId), eq(musicConnections.provider, provider)));
     return connection;
   }
 
@@ -49,12 +44,7 @@ export class MusicConnectionService extends DbService {
   async deleteConnection(userId: string, provider: MusicProvider) {
     await this.database
       .delete(musicConnections)
-      .where(
-        and(
-          eq(musicConnections.userId, userId),
-          eq(musicConnections.provider, provider),
-        ),
-      );
+      .where(and(eq(musicConnections.userId, userId), eq(musicConnections.provider, provider)));
   }
 }
 

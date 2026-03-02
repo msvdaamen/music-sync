@@ -28,25 +28,27 @@ export class SpotifyClient extends DbService implements MusicClient {
     super();
   }
   async getTracks(offset: number, limit: number): Promise<OffsetPagination<Track>> {
-    const response = await this.fetch(`${this.apiUrl}/v1/me/tracks?limit=${limit}&offset=${offset}`);
+    const response = await this.fetch(
+      `${this.apiUrl}/v1/me/tracks?limit=${limit}&offset=${offset}`,
+    );
     const data = (await response.json()) as Spotify.GetUserTracksResponse;
-    const trackData: Track[] = data.items.map(item => {
+    const trackData: Track[] = data.items.map((item) => {
       const images = item.track.album.images;
-      const artists = item.track.artists.map(artist => ({ id: artist.id, name: artist.name }));
+      const artists = item.track.artists.map((artist) => ({ id: artist.id, name: artist.name }));
 
       return {
         id: item.track.id,
         name: item.track.name,
         images,
-        artists
-      }
-    })
+        artists,
+      };
+    });
     return {
       data: trackData,
       total: data.total,
       limit,
-      offset
-    }
+      offset,
+    };
   }
 
   async getProfile(): Promise<Spotify.GetCurrentUserProfileResponse> {
@@ -70,10 +72,7 @@ export class SpotifyClient extends DbService implements MusicClient {
   }
 
   private isTokenExpired(): boolean {
-    return isAfter(
-      sub(new Date(), { seconds: this.bufferRefreshTimeS }),
-      this.expiresAt,
-    );
+    return isAfter(sub(new Date(), { seconds: this.bufferRefreshTimeS }), this.expiresAt);
   }
 
   private async refreshAccessToken(): Promise<void> {
@@ -96,10 +95,7 @@ export class SpotifyClient extends DbService implements MusicClient {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization:
-          "Basic " +
-          Buffer.from(this.clientId + ":" + this.clientSecret).toString(
-            "base64",
-          ),
+          "Basic " + Buffer.from(this.clientId + ":" + this.clientSecret).toString("base64"),
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
@@ -109,9 +105,7 @@ export class SpotifyClient extends DbService implements MusicClient {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        `Failed to refresh Spotify access token: ${response.status} ${errorBody}`,
-      );
+      throw new Error(`Failed to refresh Spotify access token: ${response.status} ${errorBody}`);
     }
 
     const data = (await response.json()) as Spotify.RefreshTokenResponse;
@@ -135,10 +129,7 @@ export class SpotifyClient extends DbService implements MusicClient {
         tokenExpiresAt: this.expiresAt,
       })
       .where(
-        and(
-          eq(musicConnections.userId, this.userId),
-          eq(musicConnections.provider, this.provider),
-        ),
+        and(eq(musicConnections.userId, this.userId), eq(musicConnections.provider, this.provider)),
       )
       .execute();
   }

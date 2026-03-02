@@ -1,11 +1,4 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  index,
-  uuid,
-  unique,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, uuid, unique } from "drizzle-orm/pg-core";
 import { users } from "./user.schema";
 
 export const musicConnections = pgTable(
@@ -29,10 +22,7 @@ export const musicConnections = pgTable(
   },
   (table) => [
     index("music_connections_user_id_idx").on(table.userId),
-    unique("music_connections_user_provider_unique").on(
-      table.userId,
-      table.provider,
-    ),
+    unique("music_connections_user_provider_unique").on(table.userId, table.provider),
   ],
 );
 

@@ -24,18 +24,18 @@ export namespace Spotify {
     url: string;
     height: number;
     width: number;
-  }
+  };
 
   export type SimpleArtist = {
     id: string;
     name: string;
-  }
+  };
 
   export type Album = {
     id: string;
     name: string;
     images: Image[];
-  }
+  };
 
   export type Track = {
     id: string;

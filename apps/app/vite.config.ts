@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
+import { cloudflare } from "@cloudflare/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -17,6 +18,7 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
+    cloudflare(),
   ],
   resolve: {
     alias: {

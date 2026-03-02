@@ -1,14 +1,9 @@
-import { Hono } from "hono";
-import { auth } from "./lib/auth";
-import { cors } from "hono/cors";
-import { rateLimiter } from "hono-rate-limiter";
-import { secureHeaders } from "hono/secure-headers";
-import { getConnInfo } from "hono/bun";
 import { musicConnectionRouter } from "./features/music-connection/controller";
+import { createApp } from "./lib/setup";
+import { cors } from "hono/cors";
 
-const app = new Hono();
+const app = createApp();
 
-app.use(secureHeaders());
 app.use(
   cors({
     origin: ["http://localhost:5173"],
@@ -19,23 +14,12 @@ app.use(
     credentials: true,
   }),
 );
-const limiter = rateLimiter({
-  windowMs: 60 * 1000, // 1 minutes
-  limit: 120, // Limit each IP to 100 requests per `window` (here, per 1 minutes).
-  standardHeaders: "draft-6", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  keyGenerator: (c) => {
-    const info = getConnInfo(c);
-    const cfConnectingIp = c.req.header()["cf-connecting-ip"];
-    const realIp = c.req.header()["x-forwarded-for"];
-    return cfConnectingIp || realIp || (info.remote.address as string);
-  },
-});
-app.use(limiter);
-
 app.get("/", (c) => c.text("Hello!"));
 
-app.on(["POST", "GET"], "/v1/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/v1/auth/*", (c) => c.get("auth").handler(c.req.raw));
 
 app.route("/v1/connections", musicConnectionRouter);
 
-export default app;
+export default {
+  fetch: app.fetch,
+} satisfies ExportedHandler<Env>;

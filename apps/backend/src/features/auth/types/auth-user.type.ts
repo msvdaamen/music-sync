@@ -1,3 +1,9 @@
-import { auth } from "../../../lib/auth";
-
-export type AuthUser = typeof auth.$Infer.Session.user;
+export type AuthUser = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  email: string;
+  emailVerified: boolean;
+  name: string;
+  image?: string | null | undefined;
+};

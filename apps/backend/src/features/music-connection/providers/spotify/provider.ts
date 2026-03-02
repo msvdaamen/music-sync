@@ -1,16 +1,11 @@
-import { add, isAfter, sub } from "date-fns";
-import type { MusicProvider } from "../../types/music-provider.type";
+import { add } from "date-fns";
 import { MusicProviderClient } from "../provider";
 import { type Spotify } from "./types";
-import { DbService } from "../../../../providers/database";
-import {
-  musicConnections,
-  type MusicConnectionEntity,
-} from "../../../../schema";
-import { and, eq } from "drizzle-orm";
-import { decrypt, encrypt } from "../../../../lib/encryption";
+import { type MusicConnectionEntity } from "../../../../schema";
+import { decrypt } from "../../../../lib/encryption";
 import type { MusicClient } from "../../types/music-client";
 import { SpotifyClient } from "./client";
+import { env } from "cloudflare:workers";
 
 export class SpotifyProvider extends MusicProviderClient {
   accountUrl = "https://accounts.spotify.com";
@@ -26,7 +21,7 @@ export class SpotifyProvider extends MusicProviderClient {
     super();
   }
 
-  async authorize(userId: string): Promise<string> {
+  async authorize(_: string): Promise<string> {
     const authUrl = new URL(`${this.accountUrl}/authorize`);
     const state = this.generateRandomString(16);
     const params = {
@@ -48,10 +43,7 @@ export class SpotifyProvider extends MusicProviderClient {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization:
-          "Basic " +
-          Buffer.from(this.clientId + ":" + this.clientSecret).toString(
-            "base64",
-          ),
+          "Basic " + Buffer.from(this.clientId + ":" + this.clientSecret).toString("base64"),
       },
       body: new URLSearchParams({
         client_id: this.clientId,
@@ -83,10 +75,7 @@ export class SpotifyProvider extends MusicProviderClient {
     };
   }
 
-  createClient(
-    userId: string,
-    musicConnection: MusicConnectionEntity,
-  ): MusicClient {
+  createClient(userId: string, musicConnection: MusicConnectionEntity): MusicClient {
     const accessToken = decrypt(musicConnection.accessTokenEncrypted);
     const refreshToken = decrypt(musicConnection.refreshTokenEncrypted);
     const expiresAt = musicConnection.tokenExpiresAt;
@@ -102,7 +91,7 @@ export class SpotifyProvider extends MusicProviderClient {
 }
 
 export const spotifyProvider = new SpotifyProvider(
-  process.env.SPOTIFY_CLIENT_ID!,
-  process.env.SPOTIFY_CLIENT_SECRET!,
-  process.env.SPOTIFY_REDIRECT_URI!,
+  env.SPOTIFY_CLIENT_ID,
+  env.SPOTIFY_CLIENT_SECRET,
+  env.SPOTIFY_REDIRECT_URI,
 );

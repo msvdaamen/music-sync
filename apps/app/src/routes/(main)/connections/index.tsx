@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Music2, ExternalLink, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,8 @@ import {
 import { useCreateSpotifyConnection } from "@/features/connections/api/create-spotify-connection";
 import { useDeleteConnection } from "@/features/connections/api/delete-connection";
 import { useConnections } from "@/features/connections/api/get-connection";
+import { cn } from "@/lib/utils";
+import type { MouseEvent } from "react";
 
 export const Route = createFileRoute("/(main)/connections/")({
   component: IndexPage,
@@ -32,9 +34,9 @@ function IndexPage() {
   const hasSpotifyConnection = connections?.some(
     (connection) => connection.provider === "spotify",
   );
-  // const hasAppleMusicConnection = connections?.some(
-  //   (connection) => connection.provider === "apple_music",
-  // );
+  const hasAppleMusicConnection = connections?.some(
+    (connection) => connection.provider === "apple_music",
+  );
 
   return (
     <>
@@ -50,26 +52,39 @@ function IndexPage() {
       {/* Service cards */}
       <div className="grid gap-6 sm:grid-cols-2">
         <SpotifyCard isConnected={hasSpotifyConnection} />
-        <AppleMusicCard isConnected={false} />
+        <AppleMusicCard isConnected={hasAppleMusicConnection} />
       </div>
     </>
   );
 }
 
 function SpotifyCard({ isConnected }: { isConnected: boolean }) {
+  const router = useRouter();
   const createSpotifyConnection = useCreateSpotifyConnection();
   const deleteConnection = useDeleteConnection();
 
-  async function startAuthFlow() {
+  async function startAuthFlow(event: MouseEvent) {
+    event.stopPropagation();
     await createSpotifyConnection.mutateAsync();
   }
 
-  async function disconnect() {
+  async function disconnect(event: MouseEvent) {
+    event.stopPropagation();
     await deleteConnection.mutateAsync("spotify");
   }
 
+  function navigate() {
+    if (!isConnected) return;
+    router.navigate({ to: "/connections/spotify" });
+  }
+
   return (
-    <Card>
+    <Card
+      className={cn({
+        "cursor-pointer": isConnected,
+      })}
+      onClick={navigate}
+    >
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-[#1DB954]/10">
