@@ -6,8 +6,10 @@ on:
       - main
 
 jobs:
-  check-app:
-    name: App — Lint & Test
+  # ── App ────────────────────────────────────────────────────────────────────
+
+  app-lint:
+    name: App / Lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,11 +28,31 @@ jobs:
       - name: Lint
         run: bun run lint
 
+  app-test:
+    name: App / Test
+    needs: app-lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
       - name: Test
         run: bun run test --run
 
-  check-backend:
-    name: Backend — Lint, Format & Test
+  # ── Backend ─────────────────────────────────────────────────────────────────
+
+  backend-lint:
+    name: Backend / Lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -49,8 +71,43 @@ jobs:
       - name: Lint
         run: bun run lint
 
+  backend-fmt:
+    name: Backend / Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
       - name: Format check
         run: bun run fmt:check
+
+  backend-test:
+    name: Backend / Test
+    needs: [backend-lint, backend-fmt]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Test
         run: bun run test --run
