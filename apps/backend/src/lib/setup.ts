@@ -36,7 +36,7 @@ const factory = createFactory<SetupContext>({
       }),
     );
     app.use(async (c, next) => {
-      const db = createDatabase(c.env.HYPERDRIVE!.connectionString);
+      const db = await createDatabase(c.env.HYPERDRIVE.connectionString);
       const auth = createAuthClient(db, c.env);
       c.set("db", db);
       c.set("auth", auth);

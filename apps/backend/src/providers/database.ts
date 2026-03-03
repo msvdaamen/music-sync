@@ -2,9 +2,13 @@ import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { getDatabase } from "../lib/setup";
+import { Client } from "pg";
 
-export function createDatabase(url: string): NodePgDatabase<typeof schema> {
-  const db = drizzle(url, {
+export async function createDatabase(url: string): Promise<NodePgDatabase<typeof schema>> {
+  const client = new Client({ connectionString: url });
+  await client.connect();
+
+  const db = drizzle(client, {
     casing: "snake_case",
     schema,
   });
