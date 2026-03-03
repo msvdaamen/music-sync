@@ -4,6 +4,7 @@ import * as schema from "../schema";
 import { createDatabase } from "../providers/database";
 import { createAuthClient } from "../providers/auth";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { cors } from "hono/cors";
 
 export type SetupContext = {
   Variables: {
@@ -25,6 +26,15 @@ export const getDatabase = () => {
 
 const factory = createFactory<SetupContext>({
   initApp: (app) => {
+    app.use(
+      cors({
+        origin: ["http://localhost:5173", "https://music-sync-app.msvdaamen.workers.dev"],
+        allowHeaders: ["Content-Type", "Authorization"],
+        allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE"],
+        exposeHeaders: ["Content-Length"],
+        credentials: true,
+      }),
+    );
     app.use(async (c, next) => {
       const db = createDatabase(c.env.HYPERDRIVE!.connectionString);
       const auth = createAuthClient(db, c.env);
