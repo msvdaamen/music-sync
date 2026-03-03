@@ -7,6 +7,7 @@ import { spotifyProvider } from "./providers/spotify/provider";
 import { providerDto } from "./dto/provider.dto";
 import { getTracksDto } from "./dto/get-tracks.dto";
 import { v7 as uuid } from "uuid";
+
 const app = authRouter.createApp();
 
 app.get("/", async (c) => {
