@@ -7,7 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboardIcon, Music } from "lucide-react";
+import { LayoutDashboardIcon, Link2, Music } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
@@ -15,8 +15,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navMain = [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/",
       icon: LayoutDashboardIcon,
+    },
+    {
+      title: "Connections",
+      url: "/connections",
+      icon: Link2,
     },
   ];
 
@@ -36,13 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={{
-            name: "John Doe",
-            email: "john.doe@example.com",
-            avatar: "https://example.com/avatar.jpg",
-          }}
-        />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
