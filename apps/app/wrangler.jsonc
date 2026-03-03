@@ -6,14 +6,4 @@
   "assets": {
     "not_found_handling": "single-page-application",
   },
-  "vars": {
-    "VITE_API_URL": "http://localhost:8787",
-  },
-  "env": {
-    "production": {
-      "vars": {
-        "VITE_API_URL": "http://localhost:8787",
-      },
-    },
-  },
 }

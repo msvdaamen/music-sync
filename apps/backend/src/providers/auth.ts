@@ -30,7 +30,7 @@ export function createAuthClient(db: NodePgDatabase<any>, env: Env) {
       enabled: true,
     },
     trustedOrigins: [
-      "https://music-sync.app",
+      "https://music-sync-app.msvdaamen.workers.dev",
       // Development mode - Expo's exp:// scheme with local IP ranges
       ...(env.ENVIRONMENT === "development" ? ["http://localhost:5173"] : []),
     ],

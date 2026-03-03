@@ -50,7 +50,7 @@ jobs:
         run: bun run build
 
       - name: Deploy to Cloudflare Workers
-        run: bun run deploy
+        run: bun run deploy -e=production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
