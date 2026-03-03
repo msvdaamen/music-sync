@@ -12,7 +12,7 @@
   },
   "compatibility_flags": ["nodejs_compat"],
   "placement": {
-    "region": "aws:eu-central1",
+    "region": "aws:eu-central-1",
   },
   "vars": {
     "ENVIRONMENT": "development",
