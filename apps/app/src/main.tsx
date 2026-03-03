@@ -4,6 +4,8 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Sentry from "@sentry/react";
+import { initSentry } from "./instrument";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +20,9 @@ export const router = createRouter({
   },
 });
 
+// Initialize Sentry
+initSentry(router);
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
@@ -27,7 +32,13 @@ declare module "@tanstack/react-router" {
 const rootElement = document.getElementById("root")!;
 
 if (!rootElement.innerHTML) {
-  const root = createRoot(rootElement);
+  const root = createRoot(rootElement, {
+    onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+      console.warn("Uncaught error", error, errorInfo.componentStack);
+    }),
+    onCaughtError: Sentry.reactErrorHandler(),
+    onRecoverableError: Sentry.reactErrorHandler(),
+  });
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
