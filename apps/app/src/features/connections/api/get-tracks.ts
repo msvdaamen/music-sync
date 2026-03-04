@@ -60,6 +60,7 @@ export const useInfiniteTracks = ({
     queryFn: ({ pageParam }) =>
       getTracks({ provider, limit, offset: pageParam }),
     initialPageParam: 0,
+    refetchOnWindowFocus: false,
     getNextPageParam: (lastPage, _allPages, lastPageParam) => {
       const nextOffset = lastPageParam + limit;
       if (nextOffset >= lastPage.total) return undefined;
