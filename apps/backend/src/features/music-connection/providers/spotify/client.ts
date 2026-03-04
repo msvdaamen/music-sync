@@ -8,6 +8,7 @@ import { musicConnections } from "../../../../schema";
 import { and, eq } from "drizzle-orm";
 import type { Track } from "../../types/track.type";
 import type { OffsetPagination } from "../../../../types/offset-pagination";
+import { Playlist } from "../../types/playlist.type";
 
 export class SpotifyClient extends DbService implements MusicClient {
   private readonly provider: MusicProvider = "spotify";
@@ -27,6 +28,33 @@ export class SpotifyClient extends DbService implements MusicClient {
   ) {
     super();
   }
+
+  async getPlaylists(offset: number, limit: number): Promise<OffsetPagination<Playlist>> {
+    const response = await this.fetch(
+      `${this.apiUrl}/v1/me/playlists?limit=${limit}&offset=${offset}`,
+    );
+    const data = (await response.json()) as Spotify.GetUserPlaylistsResponse;
+    const playlistData: Playlist[] = data.items.map((item) => {
+      const images = item.images.map((image) => ({
+        url: image.url,
+        height: image.height,
+        width: image.width,
+      }));
+
+      return {
+        id: item.id,
+        name: item.name,
+        images,
+      };
+    });
+    return {
+      data: playlistData,
+      total: data.total,
+      limit,
+      offset,
+    };
+  }
+
   async getTracks(offset: number, limit: number): Promise<OffsetPagination<Track>> {
     const response = await this.fetch(
       `${this.apiUrl}/v1/me/tracks?limit=${limit}&offset=${offset}`,

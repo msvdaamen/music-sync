@@ -14,8 +14,10 @@ import { Route as mainIndexRouteImport } from './routes/(main)/index'
 import { Route as AuthSignUpRouteImport } from './routes/auth/sign-up'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as mainConnectionsIndexRouteImport } from './routes/(main)/connections/index'
-import { Route as mainConnectionsSpotifyIndexRouteImport } from './routes/(main)/connections/spotify/index'
+import { Route as mainConnectionsSpotifyLikedRouteImport } from './routes/(main)/connections/spotify/liked'
 import { Route as mainConnectionsSpotifyCallbackRouteImport } from './routes/(main)/connections/spotify/callback'
+import { Route as mainConnectionsSpotifyPlaylistsIndexRouteImport } from './routes/(main)/connections/spotify/playlists/index'
+import { Route as mainConnectionsSpotifyPlaylistsPlaylistIdRouteImport } from './routes/(main)/connections/spotify/playlists/$playlistId'
 
 const mainRouteRoute = mainRouteRouteImport.update({
   id: '/(main)',
@@ -41,16 +43,28 @@ const mainConnectionsIndexRoute = mainConnectionsIndexRouteImport.update({
   path: '/connections/',
   getParentRoute: () => mainRouteRoute,
 } as any)
-const mainConnectionsSpotifyIndexRoute =
-  mainConnectionsSpotifyIndexRouteImport.update({
-    id: '/connections/spotify/',
-    path: '/connections/spotify/',
+const mainConnectionsSpotifyLikedRoute =
+  mainConnectionsSpotifyLikedRouteImport.update({
+    id: '/connections/spotify/liked',
+    path: '/connections/spotify/liked',
     getParentRoute: () => mainRouteRoute,
   } as any)
 const mainConnectionsSpotifyCallbackRoute =
   mainConnectionsSpotifyCallbackRouteImport.update({
     id: '/connections/spotify/callback',
     path: '/connections/spotify/callback',
+    getParentRoute: () => mainRouteRoute,
+  } as any)
+const mainConnectionsSpotifyPlaylistsIndexRoute =
+  mainConnectionsSpotifyPlaylistsIndexRouteImport.update({
+    id: '/connections/spotify/playlists/',
+    path: '/connections/spotify/playlists/',
+    getParentRoute: () => mainRouteRoute,
+  } as any)
+const mainConnectionsSpotifyPlaylistsPlaylistIdRoute =
+  mainConnectionsSpotifyPlaylistsPlaylistIdRouteImport.update({
+    id: '/connections/spotify/playlists/$playlistId',
+    path: '/connections/spotify/playlists/$playlistId',
     getParentRoute: () => mainRouteRoute,
   } as any)
 
@@ -60,7 +74,9 @@ export interface FileRoutesByFullPath {
   '/': typeof mainIndexRoute
   '/connections/': typeof mainConnectionsIndexRoute
   '/connections/spotify/callback': typeof mainConnectionsSpotifyCallbackRoute
-  '/connections/spotify/': typeof mainConnectionsSpotifyIndexRoute
+  '/connections/spotify/liked': typeof mainConnectionsSpotifyLikedRoute
+  '/connections/spotify/playlists/$playlistId': typeof mainConnectionsSpotifyPlaylistsPlaylistIdRoute
+  '/connections/spotify/playlists/': typeof mainConnectionsSpotifyPlaylistsIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
@@ -68,7 +84,9 @@ export interface FileRoutesByTo {
   '/': typeof mainIndexRoute
   '/connections': typeof mainConnectionsIndexRoute
   '/connections/spotify/callback': typeof mainConnectionsSpotifyCallbackRoute
-  '/connections/spotify': typeof mainConnectionsSpotifyIndexRoute
+  '/connections/spotify/liked': typeof mainConnectionsSpotifyLikedRoute
+  '/connections/spotify/playlists/$playlistId': typeof mainConnectionsSpotifyPlaylistsPlaylistIdRoute
+  '/connections/spotify/playlists': typeof mainConnectionsSpotifyPlaylistsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,7 +96,9 @@ export interface FileRoutesById {
   '/(main)/': typeof mainIndexRoute
   '/(main)/connections/': typeof mainConnectionsIndexRoute
   '/(main)/connections/spotify/callback': typeof mainConnectionsSpotifyCallbackRoute
-  '/(main)/connections/spotify/': typeof mainConnectionsSpotifyIndexRoute
+  '/(main)/connections/spotify/liked': typeof mainConnectionsSpotifyLikedRoute
+  '/(main)/connections/spotify/playlists/$playlistId': typeof mainConnectionsSpotifyPlaylistsPlaylistIdRoute
+  '/(main)/connections/spotify/playlists/': typeof mainConnectionsSpotifyPlaylistsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,7 +108,9 @@ export interface FileRouteTypes {
     | '/'
     | '/connections/'
     | '/connections/spotify/callback'
-    | '/connections/spotify/'
+    | '/connections/spotify/liked'
+    | '/connections/spotify/playlists/$playlistId'
+    | '/connections/spotify/playlists/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth/sign-in'
@@ -96,7 +118,9 @@ export interface FileRouteTypes {
     | '/'
     | '/connections'
     | '/connections/spotify/callback'
-    | '/connections/spotify'
+    | '/connections/spotify/liked'
+    | '/connections/spotify/playlists/$playlistId'
+    | '/connections/spotify/playlists'
   id:
     | '__root__'
     | '/(main)'
@@ -105,7 +129,9 @@ export interface FileRouteTypes {
     | '/(main)/'
     | '/(main)/connections/'
     | '/(main)/connections/spotify/callback'
-    | '/(main)/connections/spotify/'
+    | '/(main)/connections/spotify/liked'
+    | '/(main)/connections/spotify/playlists/$playlistId'
+    | '/(main)/connections/spotify/playlists/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,11 +177,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainConnectionsIndexRouteImport
       parentRoute: typeof mainRouteRoute
     }
-    '/(main)/connections/spotify/': {
-      id: '/(main)/connections/spotify/'
-      path: '/connections/spotify'
-      fullPath: '/connections/spotify/'
-      preLoaderRoute: typeof mainConnectionsSpotifyIndexRouteImport
+    '/(main)/connections/spotify/liked': {
+      id: '/(main)/connections/spotify/liked'
+      path: '/connections/spotify/liked'
+      fullPath: '/connections/spotify/liked'
+      preLoaderRoute: typeof mainConnectionsSpotifyLikedRouteImport
       parentRoute: typeof mainRouteRoute
     }
     '/(main)/connections/spotify/callback': {
@@ -165,6 +191,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainConnectionsSpotifyCallbackRouteImport
       parentRoute: typeof mainRouteRoute
     }
+    '/(main)/connections/spotify/playlists/': {
+      id: '/(main)/connections/spotify/playlists/'
+      path: '/connections/spotify/playlists'
+      fullPath: '/connections/spotify/playlists/'
+      preLoaderRoute: typeof mainConnectionsSpotifyPlaylistsIndexRouteImport
+      parentRoute: typeof mainRouteRoute
+    }
+    '/(main)/connections/spotify/playlists/$playlistId': {
+      id: '/(main)/connections/spotify/playlists/$playlistId'
+      path: '/connections/spotify/playlists/$playlistId'
+      fullPath: '/connections/spotify/playlists/$playlistId'
+      preLoaderRoute: typeof mainConnectionsSpotifyPlaylistsPlaylistIdRouteImport
+      parentRoute: typeof mainRouteRoute
+    }
   }
 }
 
@@ -172,14 +212,20 @@ interface mainRouteRouteChildren {
   mainIndexRoute: typeof mainIndexRoute
   mainConnectionsIndexRoute: typeof mainConnectionsIndexRoute
   mainConnectionsSpotifyCallbackRoute: typeof mainConnectionsSpotifyCallbackRoute
-  mainConnectionsSpotifyIndexRoute: typeof mainConnectionsSpotifyIndexRoute
+  mainConnectionsSpotifyLikedRoute: typeof mainConnectionsSpotifyLikedRoute
+  mainConnectionsSpotifyPlaylistsPlaylistIdRoute: typeof mainConnectionsSpotifyPlaylistsPlaylistIdRoute
+  mainConnectionsSpotifyPlaylistsIndexRoute: typeof mainConnectionsSpotifyPlaylistsIndexRoute
 }
 
 const mainRouteRouteChildren: mainRouteRouteChildren = {
   mainIndexRoute: mainIndexRoute,
   mainConnectionsIndexRoute: mainConnectionsIndexRoute,
   mainConnectionsSpotifyCallbackRoute: mainConnectionsSpotifyCallbackRoute,
-  mainConnectionsSpotifyIndexRoute: mainConnectionsSpotifyIndexRoute,
+  mainConnectionsSpotifyLikedRoute: mainConnectionsSpotifyLikedRoute,
+  mainConnectionsSpotifyPlaylistsPlaylistIdRoute:
+    mainConnectionsSpotifyPlaylistsPlaylistIdRoute,
+  mainConnectionsSpotifyPlaylistsIndexRoute:
+    mainConnectionsSpotifyPlaylistsIndexRoute,
 }
 
 const mainRouteRouteWithChildren = mainRouteRoute._addFileChildren(

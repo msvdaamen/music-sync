@@ -75,7 +75,7 @@ function SpotifyCard({ isConnected }: { isConnected: boolean }) {
 
   function navigate() {
     if (!isConnected) return;
-    router.navigate({ to: "/connections/spotify" });
+    router.navigate({ to: "/connections/spotify/playlists" });
   }
 
   return (

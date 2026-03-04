@@ -8,11 +8,24 @@ export namespace Spotify {
     email: string;
   };
 
+  export type GetUserPlaylistsResponse = {
+    limit: number;
+    offset: number;
+    total: number;
+    items: SimplePlaylist[];
+  };
+
   export type GetUserTracksResponse = {
     limit: number;
     offset: number;
     total: number;
     items: SavedTrack[];
+  };
+
+  export type SimplePlaylist = {
+    id: string;
+    name: string;
+    images: Image[];
   };
 
   export type SavedTrack = {

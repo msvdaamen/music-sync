@@ -7,6 +7,7 @@ import { spotifyProvider } from "./providers/spotify/provider";
 import { providerDto } from "./dto/provider.dto";
 import { getTracksDto } from "./dto/get-tracks.dto";
 import { v7 as uuid } from "uuid";
+import { getPlaylistsDto } from "./dto/get-playlists.dto";
 
 const app = authRouter.createApp();
 
@@ -38,6 +39,29 @@ app.get(
     const tracks = await client.getTracks(offset, limit);
 
     return c.json(tracks);
+  },
+);
+
+app.get(
+  "/:provider/playlists",
+  sValidator("param", providerDto),
+  sValidator("query", getPlaylistsDto),
+  async (c) => {
+    const user = c.get("user");
+    const { provider } = c.req.valid("param");
+    const { offset, limit } = c.req.valid("query");
+
+    const connection = await musicConnectionService.getConnectionCredentials(user.id, provider);
+
+    if (!connection) {
+      return c.json({ error: "No connection found" }, 404);
+    }
+
+    const client = spotifyProvider.createClient(user.id, connection);
+
+    const playlists = await client.getPlaylists(offset, limit);
+
+    return c.json(playlists);
   },
 );
 

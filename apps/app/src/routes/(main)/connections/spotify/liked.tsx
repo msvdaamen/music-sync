@@ -15,9 +15,9 @@ import {
 import { TrackList } from "@/features/connections/components/tracklist";
 import { type InfiniteData } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ListMusic, Music2 } from "lucide-react";
+import { Music2 } from "lucide-react";
 
-export const Route = createFileRoute("/(main)/connections/spotify/")({
+export const Route = createFileRoute("/(main)/connections/spotify/liked")({
   loader: async ({ context: { queryClient } }) => {
     queryClient.setQueryData(
       infiniteTracksQueryKey("spotify"),
@@ -56,9 +56,9 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Welcome */}
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Spotify</h1>
+        <h1 className="text-2xl font-semibold">Spotify — Tracks</h1>
       </div>
 
       {/* Library */}
@@ -66,7 +66,7 @@ function RouteComponent() {
         <CardHeader>
           <div className="flex justify-between gap-2">
             <div className="flex gap-2">
-              <ListMusic className="text-primary size-5" />
+              <Music2 className="text-primary size-5" />
               <CardTitle>Your Library</CardTitle>
             </div>
           </div>
